@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center">
+        <h2>👨‍💼 Welcome, Admin</h2>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white shadow-lg">
+                <div class="card-body text-center">
+                    <h4>Total Car Rentals</h4>
+                    <h2 id="totalRentals">0</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-warning text-white shadow-lg">
+                <div class="card-body text-center">
+                    <h4>Pending Pickups</h4>
+                    <h2 id="pendingPickups">0</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white shadow-lg">
+                <div class="card-body text-center">
+                    <h4>Completed Rentals</h4>
+                    <h2 id="completedRentals">0</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manage Cars -->
+    <h3 class="mt-4">🚘 Manage Cars</h3>
+    <a href="{{ url_for('get_cars') }}" class="btn btn-info mb-3">🚗 View Car Inventory</a>
+
+    <!-- Users & Rentals -->
+    <h3 class="mt-4">📋 Users & Rentals</h3>
+    <div class="row" id="userCards"></div>
+</div>
+
+<!-- JavaScript -->
+<script>
+    async function loadDashboard() {
+        try {
+            let statsResponse = await fetch("/dashboard_stats");
+            let statsData = await statsResponse.json();
+            document.getElementById("totalRentals").textContent = statsData.total;
+            document.getElementById("pendingPickups").textContent = statsData.pending;
+            document.getElementById("completedRentals").textContent = statsData.completed;
+
+            // Load Users
+            let usersResponse = await fetch("/get_users");
+            let usersData = await usersResponse.json();
+            let userCards = document.getElementById("userCards");
+            userCards.innerHTML = "";
+
+            usersData.forEach(user => {
+                userCards.innerHTML += `
+                    <div class="col-md-4">
+                        <div class="card shadow-sm mb-3">
+                            <div class="card-body text-center">
+                                <h5>👤 ${user.name}</h5>
+                                <p class="text-muted">${user.email}</p>
+                                <a href="/user_rentals/${user.id}" class="btn btn-primary w-100">
+                                    📂 View Rentals
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        } catch (error) {
+            console.error("❌ Error loading dashboard stats:", error);
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", loadDashboard);
+</script>
+
+{% endblock %}

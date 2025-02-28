@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Rental Details{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <a href="{{ url_for('client_dashboard') }}" class="btn btn-secondary">⬅ Back to Dashboard</a>
+    <h2 class="mt-3">🚗 Rental Details</h2>
+
+    <div class="card shadow-sm p-4 mt-3">
+        <h4>Car: {{ rental.car_name }}</h4>
+        <p><strong>Pickup Date:</strong> {{ rental.pickup_date }}</p>
+        <p><strong>Return Date:</strong> {{ rental.return_date }}</p>
+        <p><strong>Status:</strong> 
+            {% if rental.status == 'picked_up' %}
+                <span class="badge bg-success">✅ Picked Up</span>
+            {% elif rental.status == 'returned' %}
+                <span class="badge bg-secondary">🏁 Returned</span>
+            {% else %}
+                <span class="badge bg-warning text-dark">⏳ Pending</span>
+            {% endif %}
+        </p>
+
+        <h4 class="mt-4">📌 QR Code</h4>
+        <div class="text-center">
+            {% if rental.qr_code %}
+                <img src="data:image/png;base64,{{ rental.qr_code }}" class="img-fluid" width="300">
+            {% else %}
+                <p class="text-muted">No QR Code Available</p>
+            {% endif %}
+        </div>
+
+        <button class="btn btn-success mt-3" onclick="printQR()">🖨 Print QR Code</button>
+    </div>
+</div>
+
+<script>
+    function printQR() {
+        let qrWindow = window.open("", "_blank");
+        qrWindow.document.write("<html><head><title>Print QR Code</title></head><body style='text-align:center;'>");
+        qrWindow.document.write("<h2>Rental QR Code</h2>");
+        qrWindow.document.write("<img src='" + document.querySelector('img').src + "' width='300'><br>");
+        qrWindow.document.write("<button onclick='window.print()'>Print</button>");
+        qrWindow.document.write("</body></html>");
+        qrWindow.document.close();
+    }
+</script>
+{% endblock %}

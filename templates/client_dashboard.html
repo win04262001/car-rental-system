@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Client Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center">
+        <h2>👤 Welcome, {{ session['user_name'] }}</h2>
+        <a href="/index" class="btn btn-primary">🚗 Book a New Car</a>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white shadow-lg">
+                <div class="card-body text-center">
+                    <h4>Total Rentals</h4>
+                    <h2>{{ total }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-warning text-white shadow-lg">
+                <div class="card-body text-center">
+                    <h4>Pending Pickups</h4>
+                    <h2>{{ pending }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white shadow-lg">
+                <div class="card-body text-center">
+                    <h4>Completed Rentals</h4>
+                    <h2>{{ checked_in }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Rentals (Card Layout) -->
+    <h3 class="mt-4">📋 Your Recent Rentals</h3>
+    <div class="row">
+        {% for row in rentals %}
+        <div class="col-md-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body text-center">
+                    <h5 class="card-title">🚗 {{ row.car_name }}</h5>
+                    <p><strong>Pickup Date:</strong> {{ row.pickup_date }}</p>
+                    <p><strong>Return Date:</strong> {{ row.return_date }}</p>
+                    <p><strong>Status:</strong>
+                        {% if row.status == 'picked_up' %}
+                            <span class="badge bg-success">✅ Picked Up</span>
+                        {% elif row.status == 'returned' %}
+                            <span class="badge bg-secondary">🏁 Returned</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">⏳ Pending</span>
+                        {% endif %}
+                    </p>
+
+                    <!-- ✅ Now Opens in a New Page -->
+                    <a href="{{ url_for('rental_details', rental_id=row.id) }}" class="btn btn-info w-100 mt-2">
+                        🔍 View Details
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

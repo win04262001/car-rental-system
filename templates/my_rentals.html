@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}My Car Rentals{% endblock %}
+
+{% block content %}
+<h2>🚗 My Car Rentals</h2>
+
+<table class="table table-bordered mt-3">
+    <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Car Name</th>
+            <th>Pickup Date</th>
+            <th>Return Date</th>
+            <th>QR Code</th>
+            <th>Rental Status</th>
+        </tr>
+    </thead>
+    <tbody id="rentalTable">
+        {% for row in rentals %}
+        <tr id="rental-{{ row.id }}">
+            <td>{{ row.id }}</td>
+            <td>{{ row.car_name }}</td>
+            <td>{{ row.pickup_date }}</td>
+            <td>{{ row.return_date }}</td>
+            <td>{{ row.qr_code }}</td>
+            <td class="rental-status">
+                {% if row.status == 'picked_up' %}
+                    ✅ Picked Up
+                {% elif row.status == 'returned' %}
+                    🏁 Returned
+                {% else %}
+                    ⏳ Pending Pickup
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<script>
+    function updateRentalStatus() {
+        fetch("/rentals_data")
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(row => {
+                    let rentalRow = document.getElementById(`rental-${row.id}`);
+                    if (rentalRow) {
+                        let statusCell = rentalRow.querySelector(".rental-status");
+                        if (row.status === 'picked_up') {
+                            statusCell.innerHTML = "✅ Picked Up";
+                        } else if (row.status === 'returned') {
+                            statusCell.innerHTML = "🏁 Returned";
+                        } else {
+                            statusCell.innerHTML = "⏳ Pending Pickup";
+                        }
+                    }
+                });
+            })
+            .catch(error => console.error("Error fetching rentals:", error));
+    }
+
+    // Auto-refresh rental status every 5 seconds
+    setInterval(updateRentalStatus, 5000);
+</script>
+{% endblock %}

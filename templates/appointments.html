@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Appointments{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>📋 Manage Appointments</h2>
+
+    <div class="d-flex justify-content-between">
+        <input type="date" id="filterDate" class="form-control w-25">
+        <button onclick="filterAppointments()" class="btn btn-secondary ms-2">Filter</button>
+        <button onclick="exportCSV()" class="btn btn-success ms-2">Export CSV</button>
+    </div>
+
+    <table class="table table-bordered mt-3">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Appointment Date</th>
+                <th>QR Code</th>
+                <th>Check-in Time</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="appointmentTable"></tbody>
+    </table>
+</div>
+
+<script>
+    function loadAppointments(filterDate = null) {
+        let url = "/appointments_data";
+        if (filterDate) {
+            url = `/appointments/filter?date=${filterDate}`;
+        }
+        $.get(url, function(data) {
+            let tableBody = $("#appointmentTable");
+            tableBody.empty();
+
+            data.forEach(row => {
+                tableBody.append(`
+                    <tr>
+                        <td>${row.id}</td>
+                        <td>${row.name}</td>
+                        <td>${row.appointment_date}</td>
+                        <td>${row.qr_code}</td>
+                        <td>${row.check_in_time ? row.check_in_time : "Not checked in"}</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm" onclick="editAppointment(${row.id}, '${row.appointment_date}')">✏️ Edit</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteAppointment(${row.id})">🗑 Delete</button>
+                        </td>
+                    </tr>
+                `);
+            });
+        });
+    }
+
+    function filterAppointments() {
+        let date = document.getElementById("filterDate").value;
+        loadAppointments(date);
+    }
+
+    function exportCSV() {
+        window.location.href = "/appointments/export";
+    }
+
+    function deleteAppointment(id) {
+        if (confirm("Are you sure you want to delete this appointment?")) {
+            $.ajax({
+                url: `/delete_appointment/${id}`,
+                type: 'DELETE',
+                success: function(response) {
+                    alert(response.message);
+                    loadAppointments();
+                },
+                error: function() {
+                    alert("Failed to delete appointment.");
+                }
+            });
+        }
+    }
+
+    function editAppointment(id, oldDate) {
+        let newDate = prompt("Enter new appointment date:", oldDate);
+        if (newDate) {
+            $.ajax({
+                url: `/update_appointment/${id}`,
+                type: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify({ appointment_date: newDate }),
+                success: function(response) {
+                    alert(response.message);
+                    loadAppointments();
+                },
+                error: function() {
+                    alert("Failed to update appointment.");
+                }
+            });
+        }
+    }
+
+    $(document).ready(function() {
+        loadAppointments();
+    });
+</script>
+{% endblock %}

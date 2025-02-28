@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block title %}Manage Car Rentals{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <h2 class="fw-bold text-primary"><i class="fas fa-car"></i> Manage Car Rentals</h2>
+    </div>
+
+    <!-- 🚗 Rental Cards -->
+    <div class="row mt-4">
+        {% if rentals %}
+            {% for row in rentals %}
+            <div class="col-md-4">
+                <div class="card rental-card shadow-lg border-0 rounded-3">
+                    <div class="card-body text-center">
+                        <h5 class="fw-bold text-dark"><i class="fas fa-car-side"></i> {{ row.car_name }}</h5>
+                        <p><strong>Renter:</strong> {{ row.user_name }}</p>
+                        <p><strong>Pickup:</strong> {{ row.pickup_date }}</p>
+                        <p><strong>Return:</strong> {{ row.return_date }}</p>
+                        <p>
+                            <strong>Status:</strong>
+                            {% if row.status == 'pending' %}
+                                <span class="badge bg-warning text-dark px-3 py-2">⏳ Pending</span>
+                            {% elif row.status == 'approved' %}
+                                <span class="badge bg-success px-3 py-2">✅ Approved</span>
+                            {% elif row.status == 'picked_up' %}
+                                <span class="badge bg-primary px-3 py-2">🚗 Picked Up</span>
+                            {% elif row.status == 'returned' %}
+                                <span class="badge bg-secondary px-3 py-2">🏁 Returned</span>
+                            {% else %}
+                                <span class="badge bg-danger px-3 py-2">❌ Rejected</span>
+                            {% endif %}
+                        </p>
+
+                        <!-- ✅ Display QR Code Properly -->
+                        <div class="qr-container">
+                            {% if row.qr_code %}
+                                <img src="data:image/png;base64,{{ row.qr_code }}" class="qr-image img-fluid" alt="QR Code">
+                            {% else %}
+                                <p class="text-muted">No QR Code Available</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- ✅ Admin Actions -->
+                        <div class="mt-3">
+                            {% if row.status == 'pending' %}
+                                <button class="btn btn-success w-100 mb-2 action-btn" onclick="approveRental({{ row.id }})">
+                                    ✅ Approve
+                                </button>
+                                <button class="btn btn-danger w-100 action-btn" onclick="rejectRental({{ row.id }})">
+                                    ❌ Reject
+                                </button>
+                            {% elif row.status == 'approved' %}
+                                <button class="btn btn-primary w-100 action-btn" onclick="markPickedUp({{ row.id }})">
+                                    🚗 Mark as Picked Up
+                                </button>
+                            {% elif row.status == 'picked_up' %}
+                                <button class="btn btn-secondary w-100 action-btn" onclick="markReturned({{ row.id }})">
+                                    🏁 Mark as Returned
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12 text-center mt-5">
+                <h4 class="text-muted"><i class="fas fa-info-circle"></i> No Rentals Found</h4>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- JavaScript -->
+<script>
+    function approveRental(id) {
+        fetch(`/approve_rental/${id}`, { method: "PUT" })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+            location.reload();
+        })
+        .catch(error => console.error("❌ Error approving rental:", error));
+    }
+
+    function rejectRental(id) {
+        fetch(`/reject_rental/${id}`, { method: "PUT" })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+            location.reload();
+        })
+        .catch(error => console.error("❌ Error rejecting rental:", error));
+    }
+
+    function markPickedUp(id) {
+        fetch(`/pickup_rental/${id}`, { method: "PUT" })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+            location.reload();
+        })
+        .catch(error => console.error("Error:", error));
+    }
+
+    function markReturned(id) {
+        fetch(`/return_rental/${id}`, { method: "PUT" })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+            location.reload();
+        })
+        .catch(error => console.error("Error:", error));
+    }
+</script>
+
+<!-- ✅ Custom CSS for Modern Look -->
+<style>
+    .rental-card {
+        transition: transform 0.3s ease-in-out;
+        border-radius: 12px;
+        overflow: hidden;
+        padding: 15px;
+        background: #fff;
+    }
+    .rental-card:hover {
+        transform: scale(1.02);
+    }
+    .qr-container {
+        text-align: center;
+        padding: 10px;
+    }
+    .qr-image {
+        width: 120px;
+        height: 120px;
+        object-fit: contain;
+        border: 1px solid #ddd;
+        padding: 5px;
+        border-radius: 10px;
+    }
+    .action-btn {
+        font-weight: bold;
+        transition: background-color 0.3s;
+    }
+    .action-btn:hover {
+        opacity: 0.8;
+    }
+</style>
+
+{% endblock %}

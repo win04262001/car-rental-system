@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Check Appointment{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>🔎 Check Your Appointment</h2>
+    <p>Enter your name to see if you have an upcoming appointment.</p>
+    <input type="text" id="searchName" class="form-control w-50 d-inline-block" placeholder="Enter your name">
+    <button onclick="searchAppointment()" class="btn btn-primary">Search</button>
+
+    <div class="mt-4">
+        <h4>📋 Appointment Details</h4>
+        <table class="table table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Appointment Date</th>
+                    <th>Check-in Status</th>
+                </tr>
+            </thead>
+            <tbody id="appointmentResults"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    function searchAppointment() {
+        let name = document.getElementById("searchName").value;
+        if (!name) {
+            alert("Please enter a name to search.");
+            return;
+        }
+
+        fetch(`/appointments/search?name=${name}`)
+            .then(response => response.json())
+            .then(data => {
+                let tableBody = document.getElementById("appointmentResults");
+                tableBody.innerHTML = "";
+
+                if (data.length === 0) {
+                    tableBody.innerHTML = "<tr><td colspan='4'>No appointment found.</td></tr>";
+                    return;
+                }
+
+                data.forEach(row => {
+                    tableBody.innerHTML += `
+                        <tr>
+                            <td>${row.id}</td>
+                            <td>${row.name}</td>
+                            <td>${row.appointment_date}</td>
+                            <td>${row.check_in_time ? row.check_in_time : "Not checked in"}</td>
+                        </tr>
+                    `;
+                });
+            })
+            .catch(error => console.error("Error fetching appointment data:", error));
+    }
+</script>
+{% endblock %}

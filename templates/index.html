@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}🚗 Book a Car Rental{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center fw-bold text-primary"><i class="fas fa-car"></i> Book a Car Rental</h2>
+
+    <!-- ✅ View Cars Button -->
+    <div class="text-center mt-3">
+        <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#carListModal">
+            🚘 View Available Cars
+        </button>
+    </div>
+
+    <!-- 📌 Booking Form -->
+    <div class="card shadow-lg p-4 mt-4">
+        <h4 class="fw-bold">📋 Rental Details</h4>
+        <form id="rentalForm">
+            <div class="mb-3">
+                <label class="form-label">Selected Car:</label>
+                <input type="text" id="selectedCarName" class="form-control" readonly>
+                <input type="hidden" id="car_id">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Pickup Date:</label>
+                <input type="date" id="pickup_date" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Return Date:</label>
+                <input type="date" id="return_date" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">🚗 Book Now</button>
+        </form>
+    </div>
+</div>
+
+<!-- 🔥 Modal for Viewing Cars -->
+<div class="modal fade" id="carListModal" tabindex="-1" aria-labelledby="carListModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">🚘 Available Cars</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- ✅ Tab Navigation for Car Seat Filter -->
+                <ul class="nav nav-tabs mb-3" id="carSeatTabs">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="seat-4-tab" data-bs-toggle="tab" href="#seat-4">🚘 4-Seater Cars</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="seat-6-tab" data-bs-toggle="tab" href="#seat-6">🚐 6-Seater Cars</a>
+                    </li>
+                </ul>
+
+                <!-- ✅ Tab Content for Cars -->
+                <div class="tab-content">
+                    <div class="tab-pane fade show active" id="seat-4">
+                        <div class="row" id="carList4"></div>
+                    </div>
+                    <div class="tab-pane fade" id="seat-6">
+                        <div class="row" id="carList6"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ✅ JavaScript for Fetching Cars & Booking -->
+<script>
+    // Fetch Available Cars & Display in Modal
+    function loadAvailableCars() {
+        fetch('/cars')
+            .then(response => response.json())
+            .then(cars => {
+                let carList4 = document.getElementById("carList4");
+                let carList6 = document.getElementById("carList6");
+                carList4.innerHTML = "";
+                carList6.innerHTML = "";
+
+                if (cars.length === 0) {
+                    carList4.innerHTML = `<h4 class="text-center text-muted">🚗 No Available Cars</h4>`;
+                    carList6.innerHTML = `<h4 class="text-center text-muted">🚐 No Available Cars</h4>`;
+                } else {
+                    cars.forEach(car => {
+                        let carImage = car.image ? "/static/uploads/" + car.image : "/static/default_car.png";
+                        let plate_number = car.plate_number ? car.plate_number : "N/A";
+
+                        let carHTML = `
+                            <div class="col-md-6">
+                                <div class="card car-card shadow-sm mb-4">
+                                    <img src="${carImage}" class="card-img-top" alt="Car Image">
+                                    <div class="card-body text-center">
+                                        <h5 class="fw-bold text-dark"><i class="fas fa-car-side"></i> ${car.name}</h5>
+                                        <p><strong>Model:</strong> ${car.model}</p>
+                                        <p><strong>Year:</strong> ${car.year}</p>
+                                        <p><strong>Seats:</strong> ${car.seats}</p>
+                                        <p><strong>Plate No:</strong> ${plate_number}</p>
+                                        <button class="btn btn-primary w-100 mt-2" onclick="selectCar(${car.id}, '${car.name}')">🚗 Select This Car</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+
+                        // ✅ Sorting Cars into 4-seater or 6-seater categories
+                        if (car.seats == 4) {
+                            carList4.innerHTML += carHTML;
+                        } else if (car.seats == 6) {
+                            carList6.innerHTML += carHTML;
+                        }
+                    });
+                }
+            })
+            .catch(error => console.error("Error fetching cars:", error));
+    }
+
+    // Select a Car for Booking
+    function selectCar(id, name) {
+        document.getElementById("selectedCarName").value = name;
+        document.getElementById("car_id").value = id;
+
+        // ✅ Close modal when car is selected
+        let modal = bootstrap.Modal.getInstance(document.getElementById("carListModal"));
+        modal.hide();
+    }
+
+    // Handle Rental Booking
+    document.getElementById("rentalForm").onsubmit = async function(event) {
+        event.preventDefault();
+        let car_id = document.getElementById("car_id").value;
+        let pickup_date = document.getElementById("pickup_date").value;
+        let return_date = document.getElementById("return_date").value;
+
+        if (!car_id) {
+            alert("❌ Please select a car before booking!");
+            return;
+        }
+
+        let response = await fetch("/book_rental", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ car_id: car_id, pickup_date: pickup_date, return_date: return_date })
+        });
+
+        let result = await response.json();
+        if (result.qr_code) {
+            alert("✅ Booking Successful! QR Code generated.");
+        } else {
+            alert("❌ Error: " + result.error);
+        }
+    };
+
+    document.addEventListener("DOMContentLoaded", function() {
+        loadAvailableCars();
+    });
+</script>
+
+<!-- ✅ Custom CSS for Modern UI -->
+<style>
+    .car-card {
+        transition: transform 0.3s ease-in-out;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    .car-card:hover {
+        transform: scale(1.05);
+    }
+    .car-card img {
+        height: 180px;
+        object-fit: cover;
+        border-radius: 8px 8px 0 0;
+    }
+    .modal-body {
+        max-height: 500px;
+        overflow-y: auto;
+    }
+    .nav-tabs .nav-link {
+        font-weight: bold;
+    }
+</style>
+
+{% endblock %}
