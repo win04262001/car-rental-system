@@ -27,7 +27,7 @@ DB_CONFIG = {
     "host": "localhost",
     "user": "root",
     "password": "",
-    "database": "car_rental3"
+    "database": "rental"
 }
 
 if not os.path.exists(UPLOAD_FOLDER):

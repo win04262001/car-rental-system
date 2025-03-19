@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}My Appointments{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Page Header -->
+    <h2 class="mb-4" style="color: #2c3e50; font-weight: 700;">My Appointments</h2>
+
+    <!-- Appointments Table -->
+    <table class="table table-bordered mt-3" style="border: 1px solid #dfe6e9; border-radius: 12px;">
+        <thead style="background-color: #f5f6fa;">
+            <tr>
+                <th style="color: #34495e; font-weight: 600;">ID</th>
+                <th style="color: #34495e; font-weight: 600;">Name</th>
+                <th style="color: #34495e; font-weight: 600;">Appointment Date</th>
+                <th style="color: #34495e; font-weight: 600;">QR Code</th>
+                <th style="color: #34495e; font-weight: 600;">Check-in Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in appointments %}
+            <tr>
+                <td style="color: #34495e;">{{ row.id }}</td>
+                <td style="color: #34495e;">{{ row.name }}</td>
+                <td style="color: #34495e;">{{ row.appointment_date }}</td>
+                <td style="color: #34495e;">{{ row.qr_code }}</td>
+                <td style="color: #34495e;">{{ row.check_in_time if row.check_in_time else "Not checked in" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
